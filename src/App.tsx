@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { Button } from './components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card'
 import { Textarea } from './components/ui/textarea'
@@ -11,7 +11,7 @@ import { Badge } from './components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs'
 import { Input } from './components/ui/input'
-import { Play, Pause, Square, Download, Trash2, Volume2, Settings, Plus, FileText, Waveform, Music, Upload } from 'lucide-react'
+import { Play, Pause, Square, Download, Trash2, Volume2, Settings, Plus, FileText, BarChart3, Music, Upload } from 'lucide-react'
 import { blink } from './blink/client'
 import { toast } from 'react-hot-toast'
 import WaveSurfer from 'wavesurfer.js'
@@ -87,7 +87,7 @@ function App() {
     if (user) {
       loadHistory()
     }
-  }, [user])
+  }, [user, loadHistory])
 
   // Initialize waveform when audio changes
   useEffect(() => {
@@ -99,9 +99,9 @@ function App() {
         wavesurfer.current.destroy()
       }
     }
-  }, [currentAudio])
+  }, [currentAudio, initializeWaveform])
 
-  const initializeWaveform = () => {
+  const initializeWaveform = useCallback(() => {
     if (!waveformRef.current || !currentAudio) return
 
     // Destroy existing instance
@@ -150,9 +150,10 @@ function App() {
     wavesurfer.current.on('pause', () => {
       setIsPlaying(false)
     })
-  }
+  }, [currentAudio])
 
-  const loadHistory = () => {
+  const loadHistory = useCallback(() => {
+    if (!user?.id) return
     try {
       const stored = localStorage.getItem(`tts-history-${user.id}`)
       if (stored) {
@@ -165,7 +166,7 @@ function App() {
     } catch (error) {
       console.error('Failed to load history:', error)
     }
-  }
+  }, [user?.id])
 
   const saveHistory = (newHistory: ConversionHistory[]) => {
     try {
@@ -611,7 +612,7 @@ function App() {
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <CardTitle className="flex items-center gap-2">
-                          <Waveform className="h-5 w-5" />
+                          <BarChart3 className="h-5 w-5" />
                           Audio Player
                         </CardTitle>
                         <Dialog open={showExportDialog} onOpenChange={setShowExportDialog}>
